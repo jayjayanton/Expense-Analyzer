@@ -10,7 +10,8 @@ app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 RULES = {
     'Groceries': ['supermarket', 'grocery', 'whole foods', 'trader joe', 'kroger', 'safeway', 'gran aki', 'gran akí'],
-    'Dining': ['restaurant', 'cafe', 'coffee', 'starbucks', 'mcdonald', 'burger', 'pizza', 'doordash', 'ubereats', 'grubhub', 'plenisimo'],
+    'Food Delivery': ['doordash', 'door dash', 'uber eats', 'ubereats', 'grubhub', 'postmates', 'rappi', 'pedidosya', 'pedidos ya', 'deliveroo', 'just eat', 'glovo'],
+    'Dining': ['restaurant', 'cafe', 'coffee', 'starbucks', 'mcdonald', 'burger', 'pizza', 'plenisimo'],
     'Shopping': ['old navy', 'h&m', 'zara', 'etsy', 'fashion', 'shein'],
     'Travel': ['airlines', 'airways', 'flight', 'hotel', 'airbnb', 'booking.com', 'expedia'],
     'Gas': ['gas station', 'shell oil', 'chevron', 'exxon', 'mobil fuel', 'sunoco', 'bp fuel', 'petroecuador', 'primax', 'terpel', 'petrol station', 'fuel'],
