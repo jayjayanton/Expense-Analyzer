@@ -9,6 +9,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024
 
 RULES = {
+    'Education': ['p2p tomas moro', 'tomas moro', 'tomás moro', 'tuition', 'school fees', 'school tuition'],
     'Groceries': ['supermarket', 'grocery', 'whole foods', 'trader joe', 'kroger', 'safeway', 'gran aki', 'gran akí'],
     'Food Delivery': ['doordash', 'door dash', 'uber eats', 'ubereats', 'grubhub', 'postmates', 'rappi', 'pedidosya', 'pedidos ya', 'deliveroo', 'just eat', 'glovo'],
     'Dining': ['restaurant', 'cafe', 'coffee', 'starbucks', 'mcdonald', 'burger', 'pizza', 'plenisimo'],
