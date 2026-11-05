@@ -1,6 +1,7 @@
 'use strict';
 
 let transactions = [];
+const selectedTransactions = new Set();
 const categories = ['Education', 'Groceries', 'Dining', 'Food Delivery', 'Shopping', 'Travel', 'Gas', 'Transportation', 'Subscriptions', 'Health', 'Utilities', 'Entertainment', 'Other / Review'];
 const reductionTargets = { Dining: 0.25, 'Food Delivery': 0.30, Shopping: 0.20, Subscriptions: 0.25, Entertainment: 0.20, Travel: 0.10 };
 const $ = id => document.getElementById(id);
@@ -36,6 +37,7 @@ $('upload').addEventListener('click', async () => {
         if (!response.ok) throw new Error(payload.error || 'Could not analyze statement.');
 
         const remembered = savedCategories();
+        selectedTransactions.clear();
         transactions = payload.transactions.map(transaction => ({
             ...transaction,
             category: transaction.type === 'Purchase'
@@ -113,34 +115,93 @@ function render() {
     renderTable();
 }
 
-function renderTable() {
+function filteredPurchases() {
     const search = $('search').value.toLowerCase();
     const filter = $('filter').value;
-    const rows = purchases().filter(row =>
+    return purchases().filter(row =>
         (!filter || row.category === filter) && row.description.toLowerCase().includes(search));
+}
 
-    $('tbody').innerHTML = rows.map(row => '<tr><td>' + escapeHtml(row.date) +
+function updateSelectionControls(rows = filteredPurchases()) {
+    const visibleIds = rows.map(row => row.index);
+    const selectedVisible = visibleIds.filter(index => selectedTransactions.has(index)).length;
+    $('selectAll').checked = visibleIds.length > 0 && selectedVisible === visibleIds.length;
+    $('selectAll').indeterminate = selectedVisible > 0 && selectedVisible < visibleIds.length;
+    $('selectedCount').textContent = selectedTransactions.size + ' selected';
+    $('bulkApply').disabled = selectedTransactions.size === 0;
+    $('clearSelection').disabled = selectedTransactions.size === 0;
+}
+
+function renderTable() {
+    const rows = filteredPurchases();
+    $('tbody').innerHTML = rows.map(row => '<tr><td><input type="checkbox" class="row-select" data-index="' +
+        row.index + '"' + (selectedTransactions.has(row.index) ? ' checked' : '') +
+        ' aria-label="Select transaction"></td><td>' + escapeHtml(row.date) +
         '</td><td>' + escapeHtml(row.description) +
         '</td><td>' + money(row.expense) +
-        '</td><td><select data-index="' + row.index + '">' +
+        '</td><td><select class="category-select" data-index="' + row.index + '">' +
         categories.map(category => '<option value="' + escapeHtml(category) + '"' +
         (category === row.category ? ' selected' : '') + '>' +
         escapeHtml(category) + '</option>').join('') +
         '</select></td></tr>').join('');
 
-    document.querySelectorAll('#tbody select').forEach(select => {
+    document.querySelectorAll('#tbody .row-select').forEach(box => {
+        box.addEventListener('change', () => {
+            const index = Number(box.dataset.index);
+            if (box.checked) selectedTransactions.add(index);
+            else selectedTransactions.delete(index);
+            updateSelectionControls(rows);
+        });
+    });
+
+    document.querySelectorAll('#tbody .category-select').forEach(select => {
         select.addEventListener('change', () => {
             const transaction = transactions[Number(select.dataset.index)];
             transaction.category = select.value;
-            try {
-                const remembered = savedCategories();
-                remembered[merchantKey(transaction.description)] = select.value;
-                localStorage.setItem(preferenceKey, JSON.stringify(remembered));
-            } catch { /* Storage unavailable: category still applies to this session. */ }
+            rememberMerchant(transaction);
             render();
         });
     });
+    updateSelectionControls(rows);
 }
+
+function rememberMerchant(transaction) {
+    try {
+        const remembered = savedCategories();
+        remembered[merchantKey(transaction.description)] = transaction.category;
+        localStorage.setItem(preferenceKey, JSON.stringify(remembered));
+    } catch { /* Storage unavailable; changes remain in current session. */ }
+}
+
+$('selectAll').addEventListener('change', event => {
+    for (const row of filteredPurchases()) {
+        if (event.target.checked) selectedTransactions.add(row.index);
+        else selectedTransactions.delete(row.index);
+    }
+    renderTable();
+});
+
+$('clearSelection').addEventListener('click', () => {
+    selectedTransactions.clear();
+    renderTable();
+});
+
+$('bulkCategory').innerHTML = categories.map(category =>
+    '<option value="' + escapeHtml(category) + '">' + escapeHtml(category) + '</option>').join('');
+
+$('bulkApply').addEventListener('click', () => {
+    if (!selectedTransactions.size) return;
+    const category = $('bulkCategory').value;
+    for (const index of selectedTransactions) {
+        const transaction = transactions[index];
+        if (transaction && transaction.type === 'Purchase') {
+            transaction.category = category;
+            rememberMerchant(transaction);
+        }
+    }
+    selectedTransactions.clear();
+    render();
+});
 
 $('export').addEventListener('click', () => {
     const records = [
