@@ -72,10 +72,17 @@
       <p>
         <small>Edit transaction categories below; charts and suggestions recalculate automatically.</small>
       </p>
+      <div class="bulk-toolbar">
+        <span id="selectedCount" aria-live="polite">0 selected</span>
+        <label>Move selected to <select id="bulkCategory"></select></label>
+        <button id="bulkApply" type="button" disabled>Apply category</button>
+        <button id="clearSelection" type="button" disabled>Clear selection</button>
+      </div>
       <div class="tablewrap">
         <table>
           <thead>
             <tr>
+              <th><input type="checkbox" id="selectAll" aria-label="Select all visible transactions"></th>
               <th>Date</th>
               <th>Description</th>
               <th>Expense</th>
