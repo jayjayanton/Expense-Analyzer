@@ -156,3 +156,28 @@ $('export').addEventListener('click', () => {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
+
+$('exportCategories').addEventListener('click', async () => {
+    if (!transactions.length) return;
+    const button = $('exportCategories');
+    button.disabled = true;
+    $('error').textContent = '';
+    try {
+        const response = await fetch('/api/export-categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(transactions)
+        });
+        if (!response.ok) throw new Error('Could not export category CSV files.');
+        const url = URL.createObjectURL(await response.blob());
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'expense_categories.zip';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+        $('error').textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});
