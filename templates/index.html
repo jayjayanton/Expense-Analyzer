@@ -1,9 +1,94 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expense Analyzer</title><script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head><body><main class="wrap"><h1>Expense Analyzer</h1><p>American Express CSV insights · Python + Flask · Local processing</p>
-<section class="panel"><div class="row"><input type="file" id="file" accept=".csv"><button id="upload">Analyze statement</button><label><input type="checkbox" id="reverse"> Reverse amount signs</label></div><p><small>Statements are processed locally and are not stored. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small></p><div id="error" role="alert"></div></section>
-<div id="dashboard"><div class="grid"><div class="stat">Total expenses<b id="total"></b></div><div class="stat">Potential savings*<b id="savings"></b></div><div class="stat">Transactions<b id="count"></b></div></div>
-<div class="charts"><section class="panel"><h2>Spending by category</h2><div id="pie" class="chart"></div></section><section class="panel"><h2>Monthly expenses</h2><div id="monthly" class="chart"></div></section></div>
-<section class="panel"><h2>Where to cut spending</h2><p><small>*Illustrative reduction scenarios, not guaranteed savings or personalized financial advice.</small></p><div id="tips"></div></section>
-<section class="panel"><div class="row"><h2>Transactions</h2><button id="export">Export categorized CSV</button><label>Category <select id="filter"><option value="">All</option></select></label><label>Search <input id="search" placeholder="Merchant"></label></div><p><small>Edit transaction categories below; charts and suggestions recalculate automatically.</small></p><div class="tablewrap"><table><thead><tr><th>Date</th><th>Description</th><th>Expense</th><th>Category</th></tr></thead><tbody id="tbody"></tbody></table></div></section></div></main>
-<script src="{{ url_for('static', filename='js/main.js') }}" defer></script></body></html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>Expense Analyzer</title>
+      <script src="https://cdn.plot.ly/plotly-2.35.2.min.js">
+      </script>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    </head>
+    <body>
+      <main class="wrap">
+        <h1>Expense Analyzer</h1>
+        <p>American Express CSV insights · Python + Flask · Local processing</p>
+        <section class="panel">
+          <div class="row">
+            <input type="file" id="file" accept=".csv">
+            <button id="upload">Analyze statement</button>
+            <label>
+              <input type="checkbox" id="reverse"> Reverse amount signs</label>
+            </div>
+            <p>
+              <small>Statements are processed locally and are not stored. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small>
+            </p>
+            <div id="error" role="alert">
+            </div>
+          </section>
+          <div id="dashboard">
+            <div class="grid">
+              <div class="stat">Total expenses<b id="total">
+              </b>
+            </div>
+            <div class="stat">Potential savings*<b id="savings">
+            </b>
+          </div>
+          <div class="stat">Transactions<b id="count">
+          </b>
+        </div>
+      </div>
+      <div class="charts">
+        <section class="panel">
+          <h2>Spending by category</h2>
+          <div id="pie" class="chart">
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Monthly expenses</h2>
+          <div id="monthly" class="chart">
+          </div>
+        </section>
+      </div>
+      <section class="panel">
+        <h2>Where to cut spending</h2>
+        <p>
+          <small>*Illustrative reduction scenarios, not guaranteed savings or personalized financial advice.</small>
+        </p>
+        <div id="tips">
+        </div>
+      </section>
+      <section class="panel">
+        <div class="row">
+          <h2>Transactions</h2>
+          <button id="export">Export categorized CSV</button>
+          <label>Category <select id="filter">
+            <option value="">All</option>
+          </select>
+        </label>
+        <label>Search <input id="search" placeholder="Merchant">
+        </label>
+      </div>
+      <p>
+        <small>Edit transaction categories below; charts and suggestions recalculate automatically.</small>
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Expense</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="{{ url_for('static', filename='js/main.js') }}" defer>
+</script>
+</body>
+</html>
