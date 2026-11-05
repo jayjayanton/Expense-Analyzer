@@ -95,3 +95,7 @@ border-bottom:1px solid #29374b
 
 }
 
+
+.bulk-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:16px 0; }
+.bulk-toolbar button:disabled { opacity:.45; cursor:not-allowed; }
+.row-select, #selectAll { width:18px; height:18px; cursor:pointer; }
