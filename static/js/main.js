@@ -70,7 +70,7 @@ function render() {
 
     const chartLayout = {
         paper_bgcolor: '#151f31', plot_bgcolor: '#151f31',
-        font: { color: '#d9e3f0' }, margin: { l: 45, r: 20, t: 15, b: 50 }
+        font: { color: '#d9e3f0' }, margin: { l: 85, r: 25, t: 20, b: 55 }, automargin: true
     };
     if (window.Plotly) {
         Plotly.react('pie', [{
@@ -88,7 +88,7 @@ function render() {
         Plotly.react('monthly', [{
             type: 'bar', x: monthKeys, y: monthKeys.map(key => months[key]),
             marker: { color: '#65b6ff' }
-        }], { ...chartLayout, yaxis: { title: 'USD', gridcolor: '#29374b' } },
+        }], { ...chartLayout, yaxis: { title: { text: 'USD', standoff: 22 }, automargin: true, gridcolor: '#29374b' } },
         { responsive: true, displayModeBar: false });
     } else {
         $('pie').textContent = 'Charts require access to the Plotly CDN.';
