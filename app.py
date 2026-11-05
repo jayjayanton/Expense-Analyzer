@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
+from collections import defaultdict
+from zipfile import ZipFile, ZIP_DEFLATED
+from pathlib import PurePath
 import csv
 import io
 import re
@@ -116,6 +119,43 @@ def analyze():
         return jsonify(transactions=parse_csv(uploaded.read()))
     except Exception as exc:
         return jsonify(error=str(exc)), 400
+
+
+@app.post('/api/export-categories')
+def export_categories():
+    """Download one ZIP with a separate CSV for every expense category."""
+    rows = request.get_json(silent=True)
+    if not isinstance(rows, list) or len(rows) > 100000:
+        return jsonify(error='Expected a list of transactions (maximum 100,000).'), 400
+    groups = defaultdict(list)
+    for item in rows:
+        if not isinstance(item, dict):
+            return jsonify(error='Invalid transaction record.'), 400
+        kind = str(item.get('type', 'Purchase'))
+        category = str(item.get('category', 'Other / Review')) if kind == 'Purchase' else 'Non-purchase transactions'
+        groups[category].append(item)
+    output = io.BytesIO()
+    used = set()
+    with ZipFile(output, 'w', ZIP_DEFLATED) as archive:
+        for category, records in sorted(groups.items()):
+            name = re.sub(r'[^a-zA-Z0-9_-]+', '_', category).strip('_')[:70] or 'Other'
+            filename = name + '.csv'
+            suffix = 2
+            while filename.lower() in used:
+                filename = f'{name}_{suffix}.csv'
+                suffix += 1
+            used.add(filename.lower())
+            buffer = io.StringIO()
+            writer = csv.writer(buffer)
+            writer.writerow(['Date', 'Description', 'Amount', 'Transaction Type', 'Category'])
+            for item in records:
+                writer.writerow([item.get('date', ''), item.get('description', ''),
+                                 item.get('amount', ''), item.get('type', ''),
+                                 item.get('category', '')])
+            archive.writestr(filename, '\ufeff' + buffer.getvalue())
+    output.seek(0)
+    return send_file(output, mimetype='application/zip', as_attachment=True,
+                     download_name='expense_categories.zip')
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=False)
