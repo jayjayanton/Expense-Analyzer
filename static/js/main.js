@@ -1,6 +1,89 @@
 'use strict';
 
 let transactions = [];
+
+const RULES = {
+ Education:['p2p tomas moro','tomas moro','tomás moro','tuition','school fees','school tuition'],
+ Groceries:['supermarket','grocery','whole foods','trader joe','kroger','safeway','gran aki','gran akí'],
+ 'Food Delivery':['doordash','door dash','uber eats','ubereats','grubhub','postmates','rappi','pedidosya','pedidos ya','deliveroo','just eat','glovo'],
+ Dining:['restaurant','cafe','coffee','starbucks','mcdonald','burger','pizza','plenisimo'],
+ Shopping:['old navy','h&m','zara','etsy','fashion','shein'],
+ Travel:['airlines','airways','flight','hotel','airbnb','booking.com','expedia'],
+ Gas:['gas station','shell oil','chevron','exxon','mobil fuel','sunoco','bp fuel','petroecuador','primax','terpel','petrol station','fuel'],
+ Transportation:['uber trip','lyft','taxi','parking','toll','metro','bus fare','train ticket'],
+ Subscriptions:['netflix','spotify','youtube premium','google one','google storage','google drive','canva','adobe','icloud','dropbox','openai','chatgpt','prime membership','apple.com/bill'],
+ Health:['clinic','hospital','pharmacy','doctor','dental','medical','clinica','clínica'],
+ Utilities:['electric','water bill','internet','phone bill','verizon','comcast'],
+ Entertainment:['cinema','movie','theater','concert','ticketmaster']
+};
+const PAYMENT_TERMS=['payment received','online payment','autopay payment','thank you for your payment','payment - thank you'];
+const REFUND_TERMS=['refund','return credit','merchant credit','credit adjustment','reversal'];
+function csvRows(text) {
+ const lines=[]; let row=[],cell='',quoted=false;
+ text=text.replace(/^\uFEFF/,'');
+ const header=text.split(/\r?\n/).find(x=>x.trim())||'';
+ const delimiters=[',',';','\t']; const count=d=>{let q=false,n=0;for(const ch of header){if(ch==='"')q=!q;else if(ch===d&&!q)n++;}return n;};
+ const delimiter=delimiters.sort((a,b)=>count(b)-count(a))[0];
+ for(let i=0;i<text.length;i++){const ch=text[i];
+  if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}
+  else if(ch===delimiter&&!quoted){row.push(cell);cell='';}
+  else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v.trim()))lines.push(row);row=[];cell='';}
+  else cell+=ch;
+ }
+ if(quoted)throw Error('CSV has an unclosed quoted field.');
+ row.push(cell);if(row.some(v=>v.trim()))lines.push(row);
+ return lines;
+}
+function normalizeHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function parseAmount(v){
+ let s=String(v||'').trim().replace(/[$,\s]/g,'');
+ if(s.startsWith('(')&&s.endsWith(')'))s='-'+s.slice(1,-1);
+ if(!s||!/^[+-]?\d*(?:\.\d+)?$/.test(s))return null;
+ const n=Number(s);return Number.isFinite(n)?n:null;
+}
+function normalizeDate(v){
+ const s=String(v||'').trim();
+ let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+ if(m)return validDate(+m[1],+m[2],+m[3])?m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0'):s;
+ m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+ if(m){let y=+m[3];if(y<100)y+=y>=69?1900:2000;
+  let month=+m[1],day=+m[2];if(month>12&&day<=12)[month,day]=[day,month];
+  if(validDate(y,month,day))return [y,String(month).padStart(2,'0'),String(day).padStart(2,'0')].join('-');
+ }
+ return s;
+}
+function validDate(y,m,d){const x=new Date(Date.UTC(y,m-1,d));return x.getUTCFullYear()===y&&x.getUTCMonth()===m-1&&x.getUTCDate()===d;}
+function parseStatement(text){
+ const lines=csvRows(text);if(lines.length<2)throw Error('The CSV is empty or has no transactions.');
+ const headers=lines.shift().map(normalizeHeader);
+ const col=(...names)=>names.map(normalizeHeader).map(n=>headers.indexOf(n)).find(i=>i>=0)??-1;
+ const date=col('Date','Transaction Date','Posted Date','Posting Date'),desc=col('Description','Merchant','Payee','Details'),amount=col('Amount','Transaction Amount'),debit=col('Debit','Charges'),credit=col('Credit','Payments');
+ if(desc<0||(amount<0&&debit<0))throw Error('Expected Description and Amount (or Debit/Credit). Found: '+headers.join(', '));
+ const result=[];
+ for(const cells of lines){const description=String(cells[desc]||'').trim();if(!description)continue;
+  const value=amount>=0?parseAmount(cells[amount]):(parseAmount(cells[debit])||0)-(parseAmount(cells[credit])||0);
+  if(value===null||value===0)continue;
+  const lower=description.toLowerCase();
+  const type=PAYMENT_TERMS.some(t=>lower.includes(t))?'Payment':REFUND_TERMS.some(t=>lower.includes(t))?'Refund / Credit':value>0?'Purchase':'Credit / Review';
+  const category=type==='Purchase'?(Object.entries(RULES).find(([,words])=>words.some(w=>lower.includes(w)))||['Other / Review'])[0]:'Other / Review';
+  result.push({date:date>=0?normalizeDate(cells[date]):'',description,amount:value,category,type});
+ }
+ if(!result.length)throw Error('No valid transactions were found.');
+ return result;
+}
+function exportPrefix(){
+ const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
+ const dates=transactions.map(t=>t.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+ const range=dates.length?(dates[0].slice(0,7)===dates[dates.length-1].slice(0,7)?dates[0].slice(0,7):dates[0].slice(0,7)+'_to_'+dates[dates.length-1].slice(0,7)):'Undated';
+ return card+'_'+range;
+}
+function toCsv(records){
+ return '\uFEFF'+records.map(record=>record.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+}
+function saveBlob(blob,name){
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
 const selectedTransactions = new Set();
 const categories = ['Education', 'Groceries', 'Dining', 'Food Delivery', 'Shopping', 'Travel', 'Gas', 'Transportation', 'Subscriptions', 'Health', 'Utilities', 'Entertainment', 'Other / Review'];
 const reductionTargets = { Dining: 0.25, 'Food Delivery': 0.30, Shopping: 0.20, Subscriptions: 0.25, Entertainment: 0.20, Travel: 0.10 };
@@ -29,12 +112,9 @@ $('upload').addEventListener('click', async () => {
     $('error').textContent = '';
     if (!file) { $('error').textContent = 'Select a CSV first.'; return; }
 
-    const form = new FormData();
-    form.append('file', file);
     try {
-        const response = await fetch('/api/analyze', { method: 'POST', body: form });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Could not analyze statement.');
+        if (!$('cardName').value.trim()) throw Error('Enter the credit card name to label your exports.');
+        const payload = { transactions: parseStatement(await file.text()) };
 
         const remembered = savedCategories();
         selectedTransactions.clear();
@@ -203,42 +283,23 @@ $('bulkApply').addEventListener('click', () => {
     render();
 });
 
-$('export').addEventListener('click', () => {
-    const records = [
-        ['Date', 'Description', 'Amount', 'Transaction Type', 'Category'],
-        ...transactions.map(row => [row.date, row.description, row.amount, row.type, row.category])
-    ];
-    const csv = records.map(record => record.map(value =>
-        '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'categorized_transactions.csv';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
 
-$('exportCategories').addEventListener('click', async () => {
-    if (!transactions.length) return;
-    const button = $('exportCategories');
-    button.disabled = true;
-    $('error').textContent = '';
-    try {
-        const response = await fetch('/api/export-categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(transactions)
-        });
-        if (!response.ok) throw new Error('Could not export category CSV files.');
-        const url = URL.createObjectURL(await response.blob());
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'expense_categories.zip';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error) {
-        $('error').textContent = error.message;
-    } finally {
-        button.disabled = false;
-    }
+$('export').addEventListener('click',()=>{
+ if(!transactions.length)return;
+ const records=[['Date','Description','Amount','Transaction Type','Category'],...transactions.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
+ saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix()+'_categorized_transactions.csv');
+});
+$('exportCategories').addEventListener('click',async()=>{
+ if(!transactions.length)return;
+ $('error').textContent='';
+ if(!window.JSZip){$('error').textContent='ZIP library unavailable. Check your internet connection.';return;}
+ const groups={};
+ for(const t of transactions){const name=t.type==='Purchase'?t.category:'Non-purchase transactions';(groups[name]??=[]).push(t);}
+ const zip=new JSZip(),prefix=exportPrefix();
+ for(const [category,items] of Object.entries(groups)){
+  const name=category.replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'Other';
+  zip.file(prefix+'_'+name+'.csv',toCsv([['Date','Description','Amount','Transaction Type','Category'],...items.map(t=>[t.date,t.description,t.amount,t.type,t.category])]));
+ }
+ const blob=await zip.generateAsync({type:'blob'});
+ saveBlob(blob,prefix+'_expense_categories.zip');
 });
