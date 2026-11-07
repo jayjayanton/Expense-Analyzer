@@ -19,11 +19,12 @@
             <input type="file" id="file" accept=".csv">
             <label>Credit card <input id="cardName" placeholder="e.g. Amex Gold or BFSFCU" autocomplete="off" required></label>
             <button id="upload">Analyze statement</button>
+            <button id="clearReport" class="secondary-button" type="button" hidden>Clear saved report</button>
             <label>
               <input type="checkbox" id="reverse"> Reverse amount signs</label>
             </div>
             <p>
-              <small>Statements are processed locally and are not stored. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small>
+              <small>Statements are processed locally. Your report is temporarily saved in this browser tab so a refresh restores it; close the tab or choose Clear saved report to discard it. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small>
             </p>
             <div id="error" role="alert">
             </div>
@@ -89,14 +90,15 @@
           <thead>
             <tr>
               <th><input type="checkbox" id="selectAll" aria-label="Select all visible transactions"></th>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Expense</th>
-              <th>Category</th>
+              <th><button type="button" class="sort-header" data-sort="date" aria-label="Sort by Date">Date <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
+              <th><button type="button" class="sort-header" data-sort="description" aria-label="Sort by Description">Description <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
+              <th><button type="button" class="sort-header" data-sort="expense" aria-label="Sort by Expense">Expense <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
+              <th><button type="button" class="sort-header" data-sort="category" aria-label="Sort by Category">Category <span class="sort-indicator" aria-hidden="true">↕</span></button></th>
             </tr>
           </thead>
           <tbody id="tbody">
           </tbody>
+          <tfoot><tr><td></td><td colspan="2" id="tableTotalLabel">Visible total</td><td id="tableTotal" class="amount-total">$0.00</td><td></td></tr></tfoot>
         </table>
       </div>
     </section>
