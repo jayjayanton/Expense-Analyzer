@@ -68,8 +68,12 @@ function savedCategories() {
 
 function purchases() {
     const sign = $('reverse').checked ? -1 : 1;
-    return transactions.map((transaction, index) => ({ ...transaction, index, expense: transaction.amount * sign }))
-        .filter(transaction => transaction.type === 'Purchase' && transaction.expense > 0);
+    return transactions.map((transaction, index) => ({
+        ...transaction, index, expense: Number(transaction.amount) * sign
+    })).filter(transaction =>
+        Number.isFinite(transaction.expense) && transaction.expense > 0 &&
+        !['Payment', 'Refund / Credit'].includes(transaction.type)
+    );
 }
 
 $('upload').addEventListener('click', async () => {
@@ -104,6 +108,10 @@ $('upload').addEventListener('click', async () => {
 $('reverse').addEventListener('change', () => {render();saveReport();});
 $('filter').addEventListener('change', () => {renderTable();saveReport();});
 $('resetFilter').addEventListener('click', () => openCategory(''));
+$('jumpToBottom').addEventListener('click',()=> $('transactionBottom').scrollIntoView({behavior:'smooth',block:'end'}));
+$('backToTransactions').addEventListener('click',()=> $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'}));
+$('bottomExport').addEventListener('click',()=> $('export').click());
+$('bottomExportCategories').addEventListener('click',()=> $('exportCategories').click());
 function openCategory(category) {
  $('filter').value = category;
  $('search').value = '';
@@ -221,7 +229,10 @@ function renderTable() {
     const rows = filteredPurchases();
     $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value : 'Transactions';
     $('transactionCount').textContent = 'Total: ' + rows.length;
-    $('tableTotal').textContent = money(rows.reduce((sum,row)=>sum+row.expense,0));
+    const visibleSum = rows.reduce((sum,row)=>sum+Number(row.expense || 0),0);
+    $('tableTotal').textContent = money(visibleSum);
+    $('bottomTotal').textContent = money(visibleSum);
+    $('bottomCount').textContent = 'Total: ' + rows.length;
     $('tableTotalLabel').textContent = 'Visible total ('+rows.length+')';
     document.querySelectorAll('.sort-header').forEach(button=>{
       const active=button.dataset.sort===sortState.key;
@@ -231,6 +242,8 @@ function renderTable() {
     $('resetFilter').disabled = !$('filter').value && !$('search').value;
     $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions' : 'Export all transactions';
     $('export').disabled = !rows.length && !!($('filter').value || $('search').value);
+    $('bottomExport').textContent = $('export').textContent;
+    $('bottomExport').disabled = $('export').disabled;
     $('tbody').innerHTML = rows.map(row => '<tr><td><input type="checkbox" class="row-select" data-index="' +
         row.index + '"' + (selectedTransactions.has(row.index) ? ' checked' : '') +
         ' aria-label="Select transaction"></td><td>' + escapeHtml(row.date) +
