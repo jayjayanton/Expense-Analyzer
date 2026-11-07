@@ -172,9 +172,10 @@ function updateSelectionControls(rows = filteredPurchases()) {
 
 function renderTable() {
     const rows = filteredPurchases();
-    $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value + ' (' + rows.length + ')' : 'Transactions (' + rows.length + ')';
+    $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value : 'Transactions';
+    $('transactionCount').textContent = 'Total Selected: ' + rows.length;
     $('resetFilter').disabled = !$('filter').value && !$('search').value;
-    $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions (' + rows.length + ')' : 'Export all transactions';
+    $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions' : 'Export all transactions';
     $('export').disabled = !rows.length && !!($('filter').value || $('search').value);
     $('tbody').innerHTML = rows.map(row => '<tr><td><input type="checkbox" class="row-select" data-index="' +
         row.index + '"' + (selectedTransactions.has(row.index) ? ' checked' : '') +
