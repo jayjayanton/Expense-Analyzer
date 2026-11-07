@@ -112,3 +112,11 @@ border-bottom:1px solid #29374b
 .secondary-button:hover{background:#304963}
 .text-button{background:transparent;color:#a5b4ca;border:1px solid transparent;font-size:13px;font-weight:500;padding:7px 10px}
 .text-button:hover{text-decoration:underline;color:#fff}
+
+.sort-header{background:transparent;color:inherit;padding:4px 0;border:0;border-radius:0;font:inherit;text-align:left;white-space:nowrap}
+.sort-header:hover,.sort-header:focus-visible{color:#65b6ff;text-decoration:underline;outline-offset:4px}
+.sort-indicator{color:#8baacb;font-size:12px;margin-left:4px}
+tfoot td{border-top:2px solid #4a6787;font-weight:700;background:#1b2b40}
+.amount-total{white-space:nowrap;font-variant-numeric:tabular-nums}
+.transaction-heading small{display:block;margin-top:2px}
+#clearReport[hidden]{display:none!important}
