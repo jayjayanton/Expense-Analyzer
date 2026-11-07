@@ -80,10 +80,10 @@
         <small>Edit transaction categories below; charts and suggestions recalculate automatically.</small>
       </p>
       <div class="bulk-toolbar">
-        <span id="selectedCount" aria-live="polite">0 selected</span>
-        <label>Move selected to <select id="bulkCategory"></select></label>
-        <button id="bulkApply" type="button" disabled>Apply category</button>
-        <button id="clearSelection" type="button" disabled>Clear selection</button>
+        <span id="selectedCount" aria-live="polite">Select transactions below to change their category</span>
+        <label id="bulkCategoryLabel" hidden>Change selected transactions to <select id="bulkCategory"></select></label>
+        <button id="bulkApply" type="button" disabled hidden>Move selected</button>
+        <button id="clearSelection" type="button" disabled hidden>Clear selection</button>
       </div>
       <div class="tablewrap">
         <table>
