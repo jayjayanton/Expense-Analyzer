@@ -86,6 +86,18 @@ function exportLabel(){
    .replace(/^_+|_+$/g, '')
    .slice(0, 70) || 'All_Transactions';
 }
+function expenseTotal(rows) {
+ const sign = $('reverse').checked ? -1 : 1;
+ return rows.reduce((sum,row) => {
+  const amount = Number(row.amount);
+  return sum + (Number.isFinite(amount) && amount * sign > 0 && !['Payment','Refund / Credit'].includes(row.type) ? amount * sign : 0);
+ },0);
+}
+function csvRecords(rows) {
+ const records = [['Date','Description','Amount','Transaction Type','Category'], ...rows.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
+ records.push(['','Total expenses',expenseTotal(rows).toFixed(2),'','']);
+ return records;
+}
 function toCsv(records){
  return '\uFEFF'+records.map(record=>record.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
 }
@@ -291,6 +303,7 @@ function renderTable() {
     $('transactionCount').textContent = 'Total: ' + rows.length;
     const visibleSum = rows.reduce((sum,row)=>sum+Number(row.expense || 0),0);
     $('tableTotal').textContent = money(visibleSum);
+    $('topVisibleTotal').textContent = money(visibleSum);
     $('bottomTotal').textContent = money(visibleSum);
     $('bottomCount').textContent = 'Total: ' + rows.length;
     $('tableTotalLabel').textContent = 'Visible total ('+rows.length+')';
@@ -379,7 +392,7 @@ $('export').addEventListener('click',()=>{
  if(!transactions.length)return;
  const rows = ($('filter').value || $('search').value) ? filteredPurchases() : transactions;
  if(!rows.length){$('error').textContent='No transactions match the current filter.';return;}
- const records=[['Date','Description','Amount','Transaction Type','Category'],...rows.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
+ const records=csvRecords(rows);
  saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix(rows)+'_'+exportLabel()+'.csv');
 });
 $('exportCategories').addEventListener('click',async()=>{
@@ -391,7 +404,7 @@ $('exportCategories').addEventListener('click',async()=>{
  const zip=new JSZip(),prefix=exportPrefix();
  for(const [category,items] of Object.entries(groups)){
   const name=category.replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'Other';
-  zip.file(prefix+'_'+name+'.csv',toCsv([['Date','Description','Amount','Transaction Type','Category'],...items.map(t=>[t.date,t.description,t.amount,t.type,t.category])]));
+  zip.file(prefix+'_'+name+'.csv',toCsv(csvRecords(items)));
  }
  const blob=await zip.generateAsync({type:'blob'});
  saveBlob(blob,prefix+'_expense_categories.zip');
