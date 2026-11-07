@@ -73,6 +73,7 @@
             <option value="">All</option>
           </select>
         </label>
+        <button id="jumpToBottom" class="secondary-button" type="button">↓ Bottom of transactions</button>
         <label>Search <input id="search" placeholder="Merchant">
         </label>
       </div>
@@ -100,6 +101,10 @@
           </tbody>
           <tfoot><tr><td></td><td colspan="2" id="tableTotalLabel">Visible total</td><td id="tableTotal" class="amount-total">$0.00</td><td></td></tr></tfoot>
         </table>
+      </div>
+      <div id="transactionBottom" class="bottom-actions">
+        <div class="bottom-summary"><span id="bottomCount">Total: 0</span><strong id="bottomTotal">$0.00</strong></div>
+        <div class="row"><button id="bottomExport" type="button">Export all transactions</button><button id="bottomExportCategories" type="button" class="secondary-button">Download all category CSVs (ZIP)</button><button id="backToTransactions" type="button" class="secondary-button">↑ Back to transactions</button></div>
       </div>
     </section>
   </div>
