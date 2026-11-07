@@ -9,8 +9,11 @@ function exportPrefix(rows = transactions){
  return card+'_'+range;
 }
 function exportLabel(){
- const value=($('exportLabel')?.value.trim() || $('filter').value || 'categorized_transactions');
- return value.replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'categorized_transactions';
+ const category = $('filter').value;
+ return (category || 'categorized_transactions')
+   .replace(/[^a-zA-Z0-9_-]+/g, '_')
+   .replace(/^_+|_+$/g, '')
+   .slice(0, 70) || 'categorized_transactions';
 }
 function toCsv(records){
  return '\uFEFF'+records.map(record=>record.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
