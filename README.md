@@ -1,20 +1,11 @@
 # Expense Analyzer
 
-A local Python/Flask app for American Express CSV statements. Interactive Plotly charts, editable expense categories, monthly totals, and scenario-based savings suggestions.
+Static browser-based expense analyzer. No Python, Flask, server, API, or paid hosting required.
 
-## Run
+Open `index.html` or publish the root directory using GitHub Pages (main branch, /root).
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
-```
+Choose a CSV statement and enter the credit card name. All transactions are parsed in the browser; no statements are uploaded to a server. Exports are named `Card_YYYY-MM_categorized_transactions.csv` and `Card_YYYY-MM_expense_categories.zip`, or `Card_YYYY-MM_to_YYYY-MM_...` for multi-month statements. Category CSVs inside the ZIP have the same prefix.
 
-Open http://127.0.0.1:5000 and upload your American Express CSV.
+Accepts Description and Amount (or Debit/Credit), with optional Date. Review transaction categories and sign conventions before relying on totals. Category preferences are stored in your browser's localStorage. Plotly and JSZip load from public CDNs and need an internet connection.
 
-Expected columns: `Description` and `Amount` (or `Debit`/`Credit`); optional `Date`. Purchases are normally positive, refunds/payments negative. Toggle reverse signs for opposite conventions.
-
-Uploaded statements are processed in memory, not persisted. Plotly loads from a CDN. Savings suggestions are illustrative, not financial advice. Do not deploy publicly without authentication and security review.
-
-**Never commit financial statements or personal data.**
+**Never commit actual statements or card numbers.** Enter a card nickname only.
