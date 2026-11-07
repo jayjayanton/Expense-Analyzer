@@ -43,6 +43,7 @@
       <div class="charts">
         <section class="panel">
           <h2>Spending by category</h2>
+          <p><small>Click a pie slice or category below to view its transactions.</small></p>
           <div id="pie" class="chart">
           </div>
         </section>
@@ -52,6 +53,7 @@
           </div>
         </section>
       </div>
+      <section class="panel"><h2>Browse individual categories</h2><div id="categoryButtons" class="category-buttons"></div></section>
       <section class="panel">
         <h2>Where to cut spending</h2>
         <p>
@@ -62,10 +64,11 @@
       </section>
       <section class="panel">
         <div class="row">
-          <h2>Transactions</h2>
+          <h2 id="transactionsHeading">Transactions</h2>
           <label>Export description <input id="exportLabel" placeholder="e.g. Food Delivery, Personal Expenses" maxlength="70"></label>
           <button id="export">Export categorized CSV</button>
         <button id="exportCategories" type="button">Download all category CSVs (ZIP)</button>
+          <button id="resetFilter" type="button">Show all categories</button>
           <label>Category <select id="filter">
             <option value="">All</option>
           </select>
