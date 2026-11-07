@@ -2,59 +2,8 @@
 
 let transactions = [];
 let sortState = {key:'date',direction:'desc'};
-const reportSessionKey = 'expense-analyzer-session-v1';
-const cardsStorageKey = 'expense-analyzer-cards-v2';
-const activeCardKey = 'expense-analyzer-active-card-v2';
-let activeCard = '';
-let storageWarningShown = false;
-function getCards(){
- try {const data=JSON.parse(localStorage.getItem(cardsStorageKey)||'{}');return data&&typeof data==='object'&&!Array.isArray(data)?data:{};}
- catch {return {};}
-}
-function snapshot(){return {transactions,card:$('cardName').value,reverse:$('reverse').checked,filter:$('filter').value,search:$('search').value,sortState,selected:[...selectedTransactions]};}
-function saveReport(){
- if(!activeCard||!transactions.length)return;
- try {
-  const cards=getCards();cards[activeCard]=snapshot();
-  localStorage.setItem(cardsStorageKey,JSON.stringify(cards));
-  localStorage.setItem(activeCardKey,activeCard);
- }catch(e){
-  if(!storageWarningShown){$('error').textContent='Browser storage is unavailable or full. Export a CSV backup; changes may not survive a refresh.';storageWarningShown=true;}
- }
-}
 function initializeFilter(){
- $('filter').innerHTML='<option value="">All</option>'+categories.map(category=>'<option value="'+escapeHtml(category)+'">'+escapeHtml(category)+'</option>').join('');
-}
-function showReport(saved){
- if(!saved||!Array.isArray(saved.transactions)||!saved.transactions.length)return false;
- transactions=saved.transactions;
- $('cardName').value=saved.card||activeCard;
- $('reverse').checked=!!saved.reverse;
- initializeFilter();
- $('filter').value=categories.includes(saved.filter)?saved.filter:'';
- $('search').value=saved.search||'';
- sortState={key:'date',direction:'desc'};
- if(['date','description','expense','category'].includes(saved.sortState?.key))sortState={key:saved.sortState.key,direction:saved.sortState.direction==='asc'?'asc':'desc'};
- selectedTransactions.clear();
- for(const index of saved.selected||[])if(Number.isInteger(index)&&index>=0&&index<transactions.length)selectedTransactions.add(index);
- $('dashboard').style.display='block';
- render();return true;
-}
-function restoreReport(){
- try {
-  let cards=getCards();
-  if(!Object.keys(cards).length){
-   const legacy=JSON.parse(sessionStorage.getItem(reportSessionKey)||'null');
-   if(legacy&&Array.isArray(legacy.transactions)&&legacy.transactions.length){
-    const name=String(legacy.card||'Recovered card').trim();cards[name]=legacy;
-    localStorage.setItem(cardsStorageKey,JSON.stringify(cards));
-    localStorage.setItem(activeCardKey,name);
-   }
-  }
-  const previous=localStorage.getItem(activeCardKey);
-  activeCard=cards[previous]?previous:Object.keys(cards)[0]||'';
-  if(activeCard)showReport(cards[activeCard]);
- }catch(e){$('error').textContent='Could not restore saved cards. Browser storage may be disabled.';}
+ $('filter').innerHTML='<option value=" ">All</option>'.replace('value=" "','value=""')+categories.map(category=>'<option value="'+escapeHtml(category)+'">'+escapeHtml(category)+'</option>').join('');
 }
 function exportPrefix(rows = transactions){
  const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
@@ -138,16 +87,14 @@ $('upload').addEventListener('click', async () => {
         initializeFilter();
         $('search').value='';
         sortState={key:'date',direction:'desc'};
-        activeCard=cardName;
         render();
-        saveReport();
     } catch (error) {
         $('error').textContent = error.message;
     }
 });
 
-$('reverse').addEventListener('change', () => {render();saveReport();});
-$('filter').addEventListener('change', () => {renderTable();saveReport();});
+$('reverse').addEventListener('change', () => {render();});
+$('filter').addEventListener('change', () => {renderTable();});
 $('resetFilter').addEventListener('click', () => openCategory(''));
 $('jumpToBottom').addEventListener('click',()=> $('transactionBottom').scrollIntoView({behavior:'smooth',block:'end'}));
 $('backToTransactions').addEventListener('click',()=> $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'}));
@@ -157,14 +104,13 @@ function openCategory(category) {
  $('filter').value = category;
  $('search').value = '';
  renderTable();
- saveReport();
  $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('search').addEventListener('input', () => {renderTable();saveReport();});
+$('search').addEventListener('input', () => {renderTable();});
 document.querySelectorAll('.sort-header').forEach(button=>button.addEventListener('click',()=>{
  const key=button.dataset.sort;
  sortState=sortState.key===key?{key,direction:sortState.direction==='asc'?'desc':'asc'}:{key,direction:key==='date'||key==='expense'?'desc':'asc'};
- renderTable();saveReport();
+ renderTable();
 }));
 
 function render() {
@@ -296,7 +242,6 @@ function renderTable() {
             if (box.checked) selectedTransactions.add(index);
             else selectedTransactions.delete(index);
             updateSelectionControls(rows);
-            saveReport();
         });
     });
 
@@ -305,7 +250,7 @@ function renderTable() {
             const transaction = transactions[Number(select.dataset.index)];
             transaction.category = select.value;
             rememberMerchant(transaction);
-            render();saveReport();
+            render();
         });
     });
     updateSelectionControls(rows);
@@ -324,12 +269,12 @@ $('selectAll').addEventListener('change', event => {
         if (event.target.checked) selectedTransactions.add(row.index);
         else selectedTransactions.delete(row.index);
     }
-    renderTable();saveReport();
+    renderTable();
 });
 
 $('clearSelection').addEventListener('click', () => {
     selectedTransactions.clear();
-    renderTable();saveReport();
+    renderTable();
 });
 
 $('bulkCategory').innerHTML = categories.map(category =>
@@ -346,7 +291,7 @@ $('bulkApply').addEventListener('click', () => {
         }
     }
     selectedTransactions.clear();
-    render();saveReport();
+    render();
 });
 
 
@@ -372,4 +317,3 @@ $('exportCategories').addEventListener('click',async()=>{
  saveBlob(blob,prefix+'_expense_categories.zip');
 });
 
-restoreReport();
