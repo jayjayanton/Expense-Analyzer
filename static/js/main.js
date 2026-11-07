@@ -25,15 +25,6 @@ function saveReport(){
 function initializeFilter(){
  $('filter').innerHTML='<option value="">All</option>'+categories.map(category=>'<option value="'+escapeHtml(category)+'">'+escapeHtml(category)+'</option>').join('');
 }
-function refreshCardPicker(){
- const cards=getCards();
- $('savedCards').innerHTML='<option value="">Select saved card</option>';
- for(const key of Object.keys(cards).sort()){
-  const option=document.createElement('option');option.value=key;option.textContent=key;$('savedCards').appendChild(option);
- }
- $('savedCards').value=activeCard&&cards[activeCard]?activeCard:'';
- $('removeCard').disabled=!activeCard||!cards[activeCard];
-}
 function showReport(saved){
  if(!saved||!Array.isArray(saved.transactions)||!saved.transactions.length)return false;
  transactions=saved.transactions;
@@ -62,16 +53,8 @@ function restoreReport(){
   }
   const previous=localStorage.getItem(activeCardKey);
   activeCard=cards[previous]?previous:Object.keys(cards)[0]||'';
-  refreshCardPicker();
   if(activeCard)showReport(cards[activeCard]);
  }catch(e){$('error').textContent='Could not restore saved cards. Browser storage may be disabled.';}
-}
-function resetToNewCard(){
- activeCard='';transactions=[];selectedTransactions.clear();
- $('dashboard').style.display='none';$('file').value='';$('cardName').value='';$('reverse').checked=false;
- $('search').value='';initializeFilter();sortState={key:'date',direction:'desc'};
- try{localStorage.removeItem(activeCardKey);}catch{}
- refreshCardPicker();
 }
 function exportPrefix(rows = transactions){
  const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
@@ -140,7 +123,7 @@ $('upload').addEventListener('click', async () => {
     try {
         const cardName=$('cardName').value.trim();
         if (!cardName) throw Error('Enter the credit card name to label your exports.');
-        if (getCards()[cardName] && !window.confirm('Replace the saved report for '+cardName+'? This will overwrite its previous transactions.')) return;
+
         const payload = { transactions: await window.pythonAnalyzer.parseStatement(await file.text()) };
 
         const remembered = savedCategories();
@@ -157,7 +140,7 @@ $('upload').addEventListener('click', async () => {
         sortState={key:'date',direction:'desc'};
         activeCard=cardName;
         render();
-        saveReport();refreshCardPicker();
+        saveReport();
     } catch (error) {
         $('error').textContent = error.message;
     }
@@ -178,25 +161,6 @@ function openCategory(category) {
  $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('search').addEventListener('input', () => {renderTable();saveReport();});
-$('addCard').addEventListener('click',()=>{resetToNewCard();$('cardName').focus();$('error').textContent='Enter a new card name and upload its CSV statement.';});
-$('savedCards').addEventListener('change',()=>{
- const name=$('savedCards').value;
- if(!name)return;
- saveReport();
- const cards=getCards();activeCard=name;
- try{localStorage.setItem(activeCardKey,name);}catch{}
- showReport(cards[name]);refreshCardPicker();$('error').textContent='';
-});
-$('removeCard').addEventListener('click',()=>{
- if(!activeCard)return;
- if(!window.confirm('Permanently remove saved expense card "'+activeCard+'" from this browser? Export a backup first if needed.'))return;
- const cards=getCards();delete cards[activeCard];
- try{localStorage.setItem(cardsStorageKey,JSON.stringify(cards));}catch(e){$('error').textContent='Could not remove card from browser storage.';return;}
- resetToNewCard();
- const next=Object.keys(cards)[0];
- if(next){activeCard=next;try{localStorage.setItem(activeCardKey,next);}catch{}showReport(cards[next]);refreshCardPicker();}
- $('error').textContent='Saved expense card removed.';
-});
 document.querySelectorAll('.sort-header').forEach(button=>button.addEventListener('click',()=>{
  const key=button.dataset.sort;
  sortState=sortState.key===key?{key,direction:sortState.direction==='asc'?'desc':'asc'}:{key,direction:key==='date'||key==='expense'?'desc':'asc'};
