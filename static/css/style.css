@@ -107,3 +107,8 @@ border-bottom:1px solid #29374b
 #transactionsHeading{scroll-margin-top:24px}
 
 .bulk-toolbar [hidden]{display:none!important}
+
+.secondary-button{background:#223650;color:#dbe9f8;border:1px solid #455670;font-size:13px;font-weight:500;padding:7px 11px}
+.secondary-button:hover{background:#304963}
+.text-button{background:transparent;color:#a5b4ca;border:1px solid transparent;font-size:13px;font-weight:500;padding:7px 10px}
+.text-button:hover{text-decoration:underline;color:#fff}
