@@ -5,7 +5,7 @@ let transactions = [];
 function exportPrefix(rows = transactions){
  const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
  const dates=rows.map(t=>t.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
- const range=dates.length?(dates[0].slice(0,7)===dates[dates.length-1].slice(0,7)?dates[0].slice(0,7):dates[0].slice(0,7)+'_to_'+dates[dates.length-1].slice(0,7)):'Undated';
+ const range=dates.length?(dates[0]===dates[dates.length-1]?dates[0]:dates[0]+'_to_'+dates[dates.length-1]):'Undated';
  return card+'_'+range;
 }
 function exportLabel(){
