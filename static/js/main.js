@@ -70,6 +70,13 @@ $('upload').addEventListener('click', async () => {
 
 $('reverse').addEventListener('change', render);
 $('filter').addEventListener('change', renderTable);
+$('resetFilter').addEventListener('click', () => openCategory(''));
+function openCategory(category) {
+ $('filter').value = category;
+ $('search').value = '';
+ renderTable();
+ $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'});
+}
 $('search').addEventListener('input', renderTable);
 
 function render() {
@@ -83,6 +90,9 @@ function render() {
     $('savings').textContent = money(ordered.reduce((sum, [category, amount]) =>
         sum + amount * (reductionTargets[category] || 0), 0));
 
+    $('categoryButtons').innerHTML = ordered.map(([category, amount]) => '<button type="button" class="category-button" data-category="' + escapeHtml(category) + '">' + escapeHtml(category) + ' · ' + money(amount) + '</button>').join('');
+    document.querySelectorAll('.category-button').forEach(button => button.addEventListener('click', () => openCategory(button.dataset.category)));
+
     const chartLayout = {
         paper_bgcolor: '#151f31', plot_bgcolor: '#151f31',
         font: { color: '#d9e3f0' }, margin: { l: 85, r: 25, t: 20, b: 55 }, automargin: true
@@ -93,6 +103,13 @@ function render() {
             values: ordered.map(item => item[1]), hole: 0.45
         }], { ...chartLayout, showlegend: true, legend: { orientation: 'h', y: -0.1 } },
         { responsive: true, displayModeBar: false });
+
+        const pieElement = $('pie');
+        if (typeof pieElement.removeAllListeners === 'function') pieElement.removeAllListeners('plotly_click');
+        if (typeof pieElement.on === 'function') pieElement.on('plotly_click', event => {
+            const category = event.points?.[0]?.label;
+            if (category && categories.includes(category)) openCategory(category);
+        });
 
         const months = {};
         for (const row of rows) {
@@ -149,6 +166,8 @@ function updateSelectionControls(rows = filteredPurchases()) {
 
 function renderTable() {
     const rows = filteredPurchases();
+    $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value + ' (' + rows.length + ')' : 'Transactions (' + rows.length + ')';
+    $('resetFilter').disabled = !$('filter').value && !$('search').value;
     $('tbody').innerHTML = rows.map(row => '<tr><td><input type="checkbox" class="row-select" data-index="' +
         row.index + '"' + (selectedTransactions.has(row.index) ? ' checked' : '') +
         ' aria-label="Select transaction"></td><td>' + escapeHtml(row.date) +
