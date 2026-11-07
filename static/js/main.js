@@ -290,11 +290,9 @@ function updateSelectionControls(rows = filteredPurchases()) {
     $('selectAll').checked = visibleIds.length > 0 && selectedVisible === visibleIds.length;
     $('selectAll').indeterminate = selectedVisible > 0 && selectedVisible < visibleIds.length;
     $('selectedCount').textContent = selectedTransactions.size ? selectedTransactions.size + ' selected' : 'Select transactions below to change their category';
-    $('bulkCategoryLabel').hidden = selectedTransactions.size === 0;
-    $('bulkApply').disabled = selectedTransactions.size === 0;
-    $('bulkApply').hidden = selectedTransactions.size === 0;
-    $('clearSelection').disabled = selectedTransactions.size === 0;
-    $('clearSelection').hidden = selectedTransactions.size === 0;
+    if ($('bulkCategoryLabel')) $('bulkCategoryLabel').hidden = selectedTransactions.size === 0;
+    if ($('bulkApply')) { $('bulkApply').disabled = selectedTransactions.size === 0; $('bulkApply').hidden = selectedTransactions.size === 0; }
+    if ($('clearSelection')) { $('clearSelection').disabled = selectedTransactions.size === 0; $('clearSelection').hidden = selectedTransactions.size === 0; }
 }
 
 function renderTable() {
