@@ -1,6 +1,33 @@
 'use strict';
 
 let transactions = [];
+let sortState = {key:'date',direction:'desc'};
+const reportSessionKey = 'expense-analyzer-session-v1';
+function saveReport(){
+ try { sessionStorage.setItem(reportSessionKey,JSON.stringify({transactions,card:$('cardName').value,reverse:$('reverse').checked,filter:$('filter').value,search:$('search').value,sortState,selected:[...selectedTransactions]})); }
+ catch(e){$('error').textContent='This browser could not save the report for refresh. Export a CSV to keep a copy.';}
+}
+function initializeFilter(){
+ $('filter').innerHTML='<option value="">All</option>'+categories.map(category=>'<option value="'+escapeHtml(category)+'">'+escapeHtml(category)+'</option>').join('');
+}
+function restoreReport(){
+ try {
+  const saved=JSON.parse(sessionStorage.getItem(reportSessionKey)||'null');
+  if(!saved||!Array.isArray(saved.transactions)||!saved.transactions.length)return;
+  transactions=saved.transactions;
+  $('cardName').value=saved.card||'';
+  $('reverse').checked=!!saved.reverse;
+  initializeFilter();
+  $('filter').value=categories.includes(saved.filter)?saved.filter:'';
+  $('search').value=saved.search||'';
+  if(['date','description','expense','category'].includes(saved.sortState?.key))sortState={key:saved.sortState.key,direction:saved.sortState.direction==='asc'?'asc':'desc'};
+  selectedTransactions.clear();
+  for(const index of saved.selected||[])if(Number.isInteger(index)&&index>=0&&index<transactions.length)selectedTransactions.add(index);
+  $('dashboard').style.display='block';$('clearReport').hidden=false;
+  render();
+ }catch(e){$('error').textContent='Could not restore the previous report. Please upload it again.';}
+}
+
 
 function exportPrefix(rows = transactions){
  const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
@@ -63,24 +90,38 @@ $('upload').addEventListener('click', async () => {
                 : transaction.category
         }));
         $('dashboard').style.display = 'block';
-        $('filter').innerHTML = '<option value="">All</option>' + categories.map(category =>
-            '<option value="' + escapeHtml(category) + '">' + escapeHtml(category) + '</option>').join('');
+        initializeFilter();
+        $('search').value='';
+        sortState={key:'date',direction:'desc'};
+        $('clearReport').hidden=false;
         render();
+        saveReport();
     } catch (error) {
         $('error').textContent = error.message;
     }
 });
 
-$('reverse').addEventListener('change', render);
-$('filter').addEventListener('change', renderTable);
+$('reverse').addEventListener('change', () => {render();saveReport();});
+$('filter').addEventListener('change', () => {renderTable();saveReport();});
 $('resetFilter').addEventListener('click', () => openCategory(''));
 function openCategory(category) {
  $('filter').value = category;
  $('search').value = '';
  renderTable();
+ saveReport();
  $('transactionsHeading').scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('search').addEventListener('input', renderTable);
+$('search').addEventListener('input', () => {renderTable();saveReport();});
+$('clearReport').addEventListener('click',()=>{
+ sessionStorage.removeItem(reportSessionKey);
+ transactions=[];selectedTransactions.clear();$('dashboard').style.display='none';$('clearReport').hidden=true;
+ $('file').value='';$('search').value='';$('filter').value='';$('error').textContent='Report cleared from this tab.';
+});
+document.querySelectorAll('.sort-header').forEach(button=>button.addEventListener('click',()=>{
+ const key=button.dataset.sort;
+ sortState=sortState.key===key?{key,direction:sortState.direction==='asc'?'desc':'asc'}:{key,direction:key==='date'||key==='expense'?'desc':'asc'};
+ renderTable();saveReport();
+}));
 
 function render() {
     const rows = purchases();
@@ -153,8 +194,14 @@ function render() {
 function filteredPurchases() {
     const search = $('search').value.toLowerCase();
     const filter = $('filter').value;
-    return purchases().filter(row =>
+    const rows=purchases().filter(row =>
         (!filter || row.category === filter) && row.description.toLowerCase().includes(search));
+    const {key,direction}=sortState;
+    rows.sort((a,b)=>{
+      const cmp=key==='expense'?a.expense-b.expense:String(a[key]||'').localeCompare(String(b[key]||''),undefined,{numeric:true,sensitivity:'base'});
+      return (direction==='asc'?cmp:-cmp)||a.index-b.index;
+    });
+    return rows;
 }
 
 function updateSelectionControls(rows = filteredPurchases()) {
@@ -174,6 +221,13 @@ function renderTable() {
     const rows = filteredPurchases();
     $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value : 'Transactions';
     $('transactionCount').textContent = 'Total: ' + rows.length;
+    $('tableTotal').textContent = money(rows.reduce((sum,row)=>sum+row.expense,0));
+    $('tableTotalLabel').textContent = 'Visible total ('+rows.length+')';
+    document.querySelectorAll('.sort-header').forEach(button=>{
+      const active=button.dataset.sort===sortState.key;
+      button.querySelector('.sort-indicator').textContent=active?(sortState.direction==='asc'?'↑':'↓'):'↕';
+      button.setAttribute('aria-sort',active?(sortState.direction==='asc'?'ascending':'descending'):'none');
+    });
     $('resetFilter').disabled = !$('filter').value && !$('search').value;
     $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions' : 'Export all transactions';
     $('export').disabled = !rows.length && !!($('filter').value || $('search').value);
@@ -194,6 +248,7 @@ function renderTable() {
             if (box.checked) selectedTransactions.add(index);
             else selectedTransactions.delete(index);
             updateSelectionControls(rows);
+            saveReport();
         });
     });
 
@@ -202,7 +257,7 @@ function renderTable() {
             const transaction = transactions[Number(select.dataset.index)];
             transaction.category = select.value;
             rememberMerchant(transaction);
-            render();
+            render();saveReport();
         });
     });
     updateSelectionControls(rows);
@@ -221,12 +276,12 @@ $('selectAll').addEventListener('change', event => {
         if (event.target.checked) selectedTransactions.add(row.index);
         else selectedTransactions.delete(row.index);
     }
-    renderTable();
+    renderTable();saveReport();
 });
 
 $('clearSelection').addEventListener('click', () => {
     selectedTransactions.clear();
-    renderTable();
+    renderTable();saveReport();
 });
 
 $('bulkCategory').innerHTML = categories.map(category =>
@@ -243,7 +298,7 @@ $('bulkApply').addEventListener('click', () => {
         }
     }
     selectedTransactions.clear();
-    render();
+    render();saveReport();
 });
 
 
@@ -268,3 +323,5 @@ $('exportCategories').addEventListener('click',async()=>{
  const blob=await zip.generateAsync({type:'blob'});
  saveBlob(blob,prefix+'_expense_categories.zip');
 });
+
+restoreReport();
