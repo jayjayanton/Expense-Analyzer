@@ -130,3 +130,7 @@ tfoot td{border-top:2px solid #4a6787;font-weight:700;background:#1b2b40}
 .danger-button:hover:not(:disabled){background:#4b2c35}
 .danger-button:disabled{opacity:.45;cursor:not-allowed}
 #savedCards{min-width:150px}
+
+.top-transaction-total{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:7px}
+.top-transaction-total span{font-size:13px;color:#a5b4ca}
+.top-transaction-total strong{font-size:20px;color:#eaf0fa;font-variant-numeric:tabular-nums}
