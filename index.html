@@ -16,15 +16,18 @@
         <p>American Express CSV insights · Python + JavaScript · Private browser-based processing</p>
         <section class="panel">
           <div class="row">
+            <label>Saved expense cards <select id="savedCards"><option value="">No saved cards</option></select></label>
+            <button id="addCard" class="secondary-button" type="button">+ Add new expense card</button>
+            <button id="removeCard" class="secondary-button danger-button" type="button" disabled>Remove existing expense card</button>
             <input type="file" id="file" accept=".csv">
             <label>Credit card <input id="cardName" placeholder="e.g. Amex Gold or BFSFCU" autocomplete="off" required></label>
             <button id="upload">Analyze statement</button>
-            <button id="clearReport" class="secondary-button" type="button" hidden>Clear saved report</button>
+            
             <label>
               <input type="checkbox" id="reverse"> Reverse amount signs</label>
             </div>
             <p>
-              <small>Statements are processed locally. Your report is temporarily saved in this browser tab so a refresh restores it; close the tab or choose Clear saved report to discard it. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small>
+              <small>Statements are processed locally. Saved expense cards and category edits are kept in this browser on this device and restored after refresh. Use Remove existing expense card to delete a saved report. Clearing browser site data also removes saved reports. Purchases normally have positive amounts; payments and refunds are excluded. Charts use the Plotly CDN.</small>
             </p>
             <div id="error" role="alert">
             </div>
