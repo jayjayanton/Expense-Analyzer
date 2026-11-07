@@ -66,9 +66,9 @@
         <div class="row">
           <h2 id="transactionsHeading">Transactions</h2>
           <label>Export description <input id="exportLabel" placeholder="e.g. Food Delivery, Personal Expenses" maxlength="70"></label>
-          <button id="export">Export categorized CSV</button>
+          <button id="export">Export all transactions</button>
         <button id="exportCategories" type="button">Download all category CSVs (ZIP)</button>
-          <button id="resetFilter" type="button">Show all categories</button>
+          <button id="resetFilter" class="secondary-button" type="button">Show all categories</button>
           <label>Category <select id="filter">
             <option value="">All</option>
           </select>
@@ -77,13 +77,13 @@
         </label>
       </div>
       <p>
-        <small>Edit transaction categories below; charts and suggestions recalculate automatically.</small>
+        <small>Edit categories below; charts and suggestions recalculate automatically. Export downloads only the visible transactions when a category or search filter is active.</small>
       </p>
       <div class="bulk-toolbar">
         <span id="selectedCount" aria-live="polite">Select transactions below to change their category</span>
         <label id="bulkCategoryLabel" hidden>Change selected transactions to <select id="bulkCategory"></select></label>
-        <button id="bulkApply" type="button" disabled hidden>Move selected</button>
-        <button id="clearSelection" type="button" disabled hidden>Clear selection</button>
+        <button id="bulkApply" class="secondary-button" type="button" disabled hidden>Move selected</button>
+        <button id="clearSelection" class="text-button" type="button" disabled hidden>Clear selection</button>
       </div>
       <div class="tablewrap">
         <table>
