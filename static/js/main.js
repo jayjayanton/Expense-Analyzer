@@ -2,14 +2,14 @@
 
 let transactions = [];
 
-function exportPrefix(){
+function exportPrefix(rows = transactions){
  const card=($('cardName').value.trim()||'Unknown_Card').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60)||'Unknown_Card';
- const dates=transactions.map(t=>t.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+ const dates=rows.map(t=>t.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
  const range=dates.length?(dates[0].slice(0,7)===dates[dates.length-1].slice(0,7)?dates[0].slice(0,7):dates[0].slice(0,7)+'_to_'+dates[dates.length-1].slice(0,7)):'Undated';
  return card+'_'+range;
 }
 function exportLabel(){
- const value=($('exportLabel')?.value.trim()||'categorized_transactions');
+ const value=($('exportLabel')?.value.trim() || $('filter').value || 'categorized_transactions');
  return value.replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'categorized_transactions';
 }
 function toCsv(records){
@@ -171,6 +171,8 @@ function renderTable() {
     const rows = filteredPurchases();
     $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value + ' (' + rows.length + ')' : 'Transactions (' + rows.length + ')';
     $('resetFilter').disabled = !$('filter').value && !$('search').value;
+    $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions (' + rows.length + ')' : 'Export all transactions';
+    $('export').disabled = !rows.length && !!($('filter').value || $('search').value);
     $('tbody').innerHTML = rows.map(row => '<tr><td><input type="checkbox" class="row-select" data-index="' +
         row.index + '"' + (selectedTransactions.has(row.index) ? ' checked' : '') +
         ' aria-label="Select transaction"></td><td>' + escapeHtml(row.date) +
@@ -243,8 +245,10 @@ $('bulkApply').addEventListener('click', () => {
 
 $('export').addEventListener('click',()=>{
  if(!transactions.length)return;
- const records=[['Date','Description','Amount','Transaction Type','Category'],...transactions.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
- saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix()+'_'+exportLabel()+'.csv');
+ const rows = ($('filter').value || $('search').value) ? filteredPurchases() : transactions;
+ if(!rows.length){$('error').textContent='No transactions match the current filter.';return;}
+ const records=[['Date','Description','Amount','Transaction Type','Category'],...rows.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
+ saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix(rows)+'_'+exportLabel()+'.csv');
 });
 $('exportCategories').addEventListener('click',async()=>{
  if(!transactions.length)return;
