@@ -8,6 +8,10 @@ function exportPrefix(){
  const range=dates.length?(dates[0].slice(0,7)===dates[dates.length-1].slice(0,7)?dates[0].slice(0,7):dates[0].slice(0,7)+'_to_'+dates[dates.length-1].slice(0,7)):'Undated';
  return card+'_'+range;
 }
+function exportLabel(){
+ const value=($('exportLabel')?.value.trim()||'categorized_transactions');
+ return value.replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'categorized_transactions';
+}
 function toCsv(records){
  return '\uFEFF'+records.map(record=>record.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
 }
@@ -218,7 +222,7 @@ $('bulkApply').addEventListener('click', () => {
 $('export').addEventListener('click',()=>{
  if(!transactions.length)return;
  const records=[['Date','Description','Amount','Transaction Type','Category'],...transactions.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
- saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix()+'_categorized_transactions.csv');
+ saveBlob(new Blob([toCsv(records)],{type:'text/csv;charset=utf-8'}),exportPrefix()+'_'+exportLabel()+'.csv');
 });
 $('exportCategories').addEventListener('click',async()=>{
  if(!transactions.length)return;
