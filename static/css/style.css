@@ -125,3 +125,8 @@ tfoot td{border-top:2px solid #4a6787;font-weight:700;background:#1b2b40}
 .bottom-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#a5b4ca}
 .bottom-summary strong{color:#eaf0fa;font-size:20px;font-variant-numeric:tabular-nums}
 #jumpToBottom{white-space:nowrap}
+
+.danger-button{border-color:#94575c;color:#ffbdc0;background:#32232c}
+.danger-button:hover:not(:disabled){background:#4b2c35}
+.danger-button:disabled{opacity:.45;cursor:not-allowed}
+#savedCards{min-width:150px}
