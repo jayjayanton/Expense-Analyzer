@@ -10,10 +10,10 @@ function exportPrefix(rows = transactions){
 }
 function exportLabel(){
  const category = $('filter').value;
- return (category || 'categorized_transactions')
+ return (category || 'All_Transactions')
    .replace(/[^a-zA-Z0-9_-]+/g, '_')
    .replace(/^_+|_+$/g, '')
-   .slice(0, 70) || 'categorized_transactions';
+   .slice(0, 70) || 'All_Transactions';
 }
 function toCsv(records){
  return '\uFEFF'+records.map(record=>record.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
