@@ -120,3 +120,8 @@ tfoot td{border-top:2px solid #4a6787;font-weight:700;background:#1b2b40}
 .amount-total{white-space:nowrap;font-variant-numeric:tabular-nums}
 .transaction-heading small{display:block;margin-top:2px}
 #clearReport[hidden]{display:none!important}
+
+.bottom-actions{border-top:1px solid #455670;margin-top:18px;padding-top:18px;display:flex;flex-direction:column;gap:12px;scroll-margin-bottom:18px}
+.bottom-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#a5b4ca}
+.bottom-summary strong{color:#eaf0fa;font-size:20px;font-variant-numeric:tabular-nums}
+#jumpToBottom{white-space:nowrap}
