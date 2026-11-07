@@ -26,7 +26,7 @@ function expenseTotal(rows) {
  },0);
 }
 function csvRecords(rows) {
- const records = [['Date','Description','Amount','Transaction Type','Category'], ...rows.map(t=>[t.date,t.description,t.amount,t.type,t.category])];
+ const records = [['Date','Description','Amount','Transaction Type','Category'], ...rows.map(t=>[t.date,t.description,Number.isFinite(Number(t.amount)) ? money(Number(t.amount)) : t.amount,t.type,t.category])];
  records.push(['','Total expenses',money(expenseTotal(rows)),'','']);
  return records;
 }
