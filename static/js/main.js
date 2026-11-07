@@ -173,7 +173,7 @@ function updateSelectionControls(rows = filteredPurchases()) {
 function renderTable() {
     const rows = filteredPurchases();
     $('transactionsHeading').textContent = $('filter').value ? 'Transactions — ' + $('filter').value : 'Transactions';
-    $('transactionCount').textContent = 'Total Selected: ' + rows.length;
+    $('transactionCount').textContent = 'Total: ' + rows.length;
     $('resetFilter').disabled = !$('filter').value && !$('search').value;
     $('export').textContent = $('filter').value || $('search').value ? 'Export visible transactions' : 'Export all transactions';
     $('export').disabled = !rows.length && !!($('filter').value || $('search').value);
