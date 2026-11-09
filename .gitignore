@@ -6,3 +6,6 @@ __pycache__/
 *.xlsx
 *.xls
 *.pdf
+node_modules/
+playwright-report/
+test-results/
